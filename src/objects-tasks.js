@@ -18,7 +18,8 @@
  *    shallowCopy({}) => {}
  */
 function shallowCopy(obj) {
-  return Object.assign({}, obj);
+  const copy = {};
+  return Object.assign(copy, obj);
 }
 
 /**
@@ -32,8 +33,23 @@ function shallowCopy(obj) {
  *    mergeObjects([{a: 1, b: 2}, {b: 3, c: 5}]) => {a: 1, b: 5, c: 5}
  *    mergeObjects([]) => {}
  */
-function mergeObjects(/* objects */) {
-  throw new Error('Not implemented');
+function mergeObjects(objects) {
+  if (objects.length === 1) {
+    return objects[0];
+  }
+  if (objects.length > 1) {
+    const a = objects[0];
+    const b = objects[1];
+    Object.entries(a).forEach(([key, value]) => {
+      Object.entries(b).forEach((key1) => {
+        if (key === key1[0]) {
+          b[key1[0]] += value;
+        }
+      });
+    });
+    return Object.assign(a, b);
+  }
+  return {};
 }
 
 /**
@@ -50,10 +66,15 @@ function mergeObjects(/* objects */) {
  *
  */
 function removeProperties(obj, keys) {
-  keys.forEach(el => {
-    delete obj[el];
-  })
-  return obj
+  const k = { ...obj };
+  if (Array.isArray(keys)) {
+    keys.forEach((el) => {
+      delete k[el];
+    });
+  } else {
+    delete k[keys];
+  }
+  return k;
 }
 
 /**
@@ -74,8 +95,13 @@ function compareObjects(obj1, obj2) {
   let answ = true;
 
   if (keys1.length === keys2.length) {
-    for (let i = 0; i < keys1.length; i++) {
-      if (!(keys1[i] === keys2[i] && Object.values(obj1)[i] === Object.values(obj2)[i])) {
+    for (let i = 0; i < keys1.length; i += 1) {
+      if (
+        !(
+          keys1[i] === keys2[i] &&
+          Object.values(obj1)[i] === Object.values(obj2)[i]
+        )
+      ) {
         answ = false;
       }
     }
@@ -95,7 +121,7 @@ function compareObjects(obj1, obj2) {
  *    isEmptyObject({a: 1}) => false
  */
 function isEmptyObject(obj) {
-  if (Objects.keys(obj).length > 0) {
+  if (Object.keys(obj).length > 0) {
     return false;
   }
   return true;
@@ -118,7 +144,7 @@ function isEmptyObject(obj) {
  *    console.log(immutableObj) => {a: 1, b: 2}
  */
 function makeImmutable(obj) {
-  return obj.freeze();
+  return Object.freeze(obj);
 }
 
 /**
@@ -131,8 +157,15 @@ function makeImmutable(obj) {
  *    makeWord({ a: [0, 1], b: [2, 3], c: [4, 5] }) => 'aabbcc'
  *    makeWord({ H:[0], e: [1], l: [2, 3, 8], o: [4, 6], W:[5], r:[7], d:[9]}) => 'HelloWorld'
  */
-function makeWord(/* lettersObject */) {
-  throw new Error('Not implemented');
+function makeWord(lettersObject) {
+  const str = [];
+  const keys = Object.keys(lettersObject);
+  keys.forEach((el) => {
+    lettersObject[el].forEach((ind) => {
+      str[ind] = el;
+    });
+  });
+  return str.join('');
 }
 
 /**
@@ -149,8 +182,34 @@ function makeWord(/* lettersObject */) {
  *    sellTickets([25, 25, 50]) => true
  *    sellTickets([25, 100]) => false (The seller does not have enough money to give change.)
  */
-function sellTickets(/* queue */) {
-  throw new Error('Not implemented');
+function sellTickets(queue) {
+  const change = {
+    25: 0,
+    50: 0,
+  };
+  let answ = true;
+  const cost = 25;
+  queue.forEach((money) => {
+    if (money === cost) {
+      change['25'] += 1;
+    } else if (money === 50) {
+      if (change['25'] < 1) {
+        answ = false;
+      } else {
+        change['25'] -= 1;
+      }
+    } else if (money === 100) {
+      if (change['25'] >= 3) {
+        change['25'] -= 3;
+      } else if (change['50'] >= 1 && change['25'] >= 1) {
+        change['50'] -= 1;
+        change['25'] -= 1;
+      } else {
+        answ = false;
+      }
+    }
+  });
+  return answ;
 }
 
 /**
@@ -168,13 +227,13 @@ function sellTickets(/* queue */) {
  */
 function Rectangle(width, height) {
   return {
-    width: width,
-    height: height,
+    width,
+    height,
 
     getArea() {
       return width * height;
-    }
-  }
+    },
+  };
 }
 
 /**
@@ -202,8 +261,10 @@ function getJSON(obj) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const parsed = JSON.parse(json);
+  Object.setPrototypeOf(parsed, proto);
+  return parsed;
 }
 
 /**
@@ -232,8 +293,22 @@ function fromJSON(/* proto, json */) {
  *      { country: 'Russia',  city: 'Saint Petersburg' }
  *    ]
  */
-function sortCitiesArray(/* arr */) {
-  throw new Error('Not implemented');
+function sortCitiesArray(arr) {
+  arr.sort((a, b) => {
+    if (a.country < b.country) {
+      return -1;
+    }
+    if (a.country === b.country) {
+      if (a.city > b.city) {
+        return 1;
+      }
+      if (a.city < b.city) {
+        return -1;
+      }
+    }
+    return 1;
+  });
+  return arr;
 }
 
 /**
@@ -266,8 +341,14 @@ function sortCitiesArray(/* arr */) {
  *    "Poland" => ["Lodz"]
  *   }
  */
-function group(/* array, keySelector, valueSelector */) {
-  throw new Error('Not implemented');
+function group(array, keySelector, valueSelector) {
+  const keys = [];
+  const values = [];
+  array.forEach(el => {
+    keys.push(keySelector(el));
+    values.push(valueSelector(el));
+  });
+  return keys;
 }
 
 /**
@@ -325,32 +406,55 @@ function group(/* array, keySelector, valueSelector */) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  answ: '',
+  arr: [],
+  counter: 0,
+  element(value) {
+    if (this.counter > 0) {
+      this.arr.push(this.answ);
+      this.answ = '';
+    }
+    this.counter += 1;
+    this.answ += value;
+    return this;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    this.answ += `#${value}`;
+    return this;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    this.answ += `.${value}`;
+    return this;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    this.answ += `[${value}]`;
+    return this;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    this.answ += `:${value}`;
+    return this;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    this.answ += `::${value}`;
+    return this;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    if (selector1 || combinator || selector2) {
+      return 's';
+    }
+    return 2;
+  },
+
+  stringify() {
+    const temp = this.answ;
+    this.answ = '';
+    return temp;
   },
 };
 
