@@ -342,13 +342,20 @@ function sortCitiesArray(arr) {
  *   }
  */
 function group(array, keySelector, valueSelector) {
-  const keys = [];
-  const values = [];
-  array.forEach(el => {
-    keys.push(keySelector(el));
-    values.push(valueSelector(el));
+  const map = new Map();
+  array.forEach((el) => {
+    const keys = keySelector(el);
+    const values = valueSelector(el);
+
+    if (map.has(keys)) {
+      map.get(keys).push(values);
+    } else {
+      const arr = [];
+      arr.push(values);
+      map.set(keys, arr);
+    }
   });
-  return keys;
+  return map;
 }
 
 /**
